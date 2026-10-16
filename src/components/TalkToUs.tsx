@@ -7,32 +7,42 @@ interface TalkToUsProps {
   articleUrl?: string;
   articleId?: string;
   articleTitle?: string;
+  article?: {
+    url?: string;
+    id?: string;
+    title?: string;
+  };
 }
 
 export const TalkToUs: React.FC<TalkToUsProps> = ({
   articleUrl,
   articleId = 'mas-exchanger-talk-to-us',
   articleTitle = 'Talk to Us — SingaRate Exchange Rates & MAS Discussion',
+  article,
 }) => {
   const [enableSSO, setEnableSSO] = useState(false);
   const [ssoApiKey, setSsoApiKey] = useState('');
   const [ssoRemoteAuth, setSsoRemoteAuth] = useState('');
   const [showConfig, setShowConfig] = useState(false);
 
-  // Dynamic origin-aware canonical URL
-  const currentUrl =
-    articleUrl ||
-    (typeof window !== 'undefined' && window.location.origin
-      ? `${window.location.origin}/talk-to-us`
-      : 'https://mas-exchanger-1.disqus.com/talk-to-us');
+  const targetArticle = {
+    url:
+      article?.url ||
+      articleUrl ||
+      (typeof window !== 'undefined' && window.location.origin
+        ? `${window.location.origin}/talk-to-us`
+        : 'https://mas-exchanger-1.disqus.com/talk-to-us'),
+    id: article?.id || articleId,
+    title: article?.title || articleTitle,
+  };
 
   const shortname = 'mas-exchanger-1';
 
   // Base Disqus config matching exact user specifications
   const baseConfig = {
-    url: currentUrl,
-    identifier: articleId,
-    title: articleTitle,
+    url: targetArticle.url,
+    identifier: targetArticle.id,
+    title: targetArticle.title,
     language: 'en',
   };
 

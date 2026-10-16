@@ -12,6 +12,40 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      (function() {
+        window.onerror = function(message, source, lineno, colno, error) {
+          if (
+            message === 'Script error.' ||
+            (typeof message === 'string' && (message.indexOf('Script error') !== -1 || message.indexOf('disqus') !== -1)) ||
+            (source && (source.indexOf('disqus') !== -1 || source.indexOf('doubleclick') !== -1))
+          ) {
+            console.warn('Caught and handled external script event:', message, source);
+            return true;
+          }
+          return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event && event.reason ? (event.reason.message || String(event.reason)) : '';
+          if (reason.indexOf('disqus') !== -1 || reason.indexOf('Script error') !== -1) {
+            event.preventDefault();
+          }
+        });
+
+        // Safeguard dynamically inserted scripts from third-party embeds
+        var origCreateElement = document.createElement.bind(document);
+        document.createElement = function(tagName, options) {
+          var el = origCreateElement(tagName, options);
+          if (tagName && tagName.toLowerCase() === 'script') {
+            el.addEventListener('error', function(e) {
+              e.stopPropagation();
+            });
+          }
+          return el;
+        };
+      })();
+    </script>
   </head>
   <body class="bg-slate-50 text-slate-900 antialiased font-['Plus_Jakarta_Sans',sans-serif]">
     <div id="root"></div>
