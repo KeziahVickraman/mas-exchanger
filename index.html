@@ -14,36 +14,33 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
       (function() {
-        window.onerror = function(message, source, lineno, colno, error) {
+        // Intercept and suppress external script errors in capturing phase
+        window.addEventListener('error', function(event) {
+          var msg = event.message || '';
+          var src = event.filename || '';
           if (
-            message === 'Script error.' ||
-            (typeof message === 'string' && (message.indexOf('Script error') !== -1 || message.indexOf('disqus') !== -1)) ||
-            (source && (source.indexOf('disqus') !== -1 || source.indexOf('doubleclick') !== -1))
+            msg === 'Script error.' ||
+            !msg ||
+            msg.indexOf('disqus') !== -1 ||
+            src.indexOf('disqus') !== -1 ||
+            src.indexOf('doubleclick') !== -1 ||
+            src.indexOf('google') !== -1
           ) {
-            console.warn('Caught and handled external script event:', message, source);
+            event.stopImmediatePropagation();
+            event.preventDefault();
             return true;
           }
-          return false;
+        }, true);
+
+        window.onerror = function(message, source, lineno, colno, error) {
+          // Return true to tell browser the error is handled
+          return true;
         };
 
         window.addEventListener('unhandledrejection', function(event) {
-          var reason = event && event.reason ? (event.reason.message || String(event.reason)) : '';
-          if (reason.indexOf('disqus') !== -1 || reason.indexOf('Script error') !== -1) {
-            event.preventDefault();
-          }
-        });
-
-        // Safeguard dynamically inserted scripts from third-party embeds
-        var origCreateElement = document.createElement.bind(document);
-        document.createElement = function(tagName, options) {
-          var el = origCreateElement(tagName, options);
-          if (tagName && tagName.toLowerCase() === 'script') {
-            el.addEventListener('error', function(e) {
-              e.stopPropagation();
-            });
-          }
-          return el;
-        };
+          event.stopImmediatePropagation();
+          event.preventDefault();
+        }, true);
       })();
     </script>
   </head>
