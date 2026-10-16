@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DiscussionEmbed, CommentCount } from 'disqus-react';
-import { MessageSquare, MessageCircle, Shield, Info, ExternalLink, Settings, Sparkles } from 'lucide-react';
+import { MessageSquare, MessageCircle, Shield, ExternalLink, Settings } from 'lucide-react';
+import { DisqusErrorBoundary } from './DisqusErrorBoundary';
 
 interface TalkToUsProps {
   articleUrl?: string;
@@ -18,15 +19,16 @@ export const TalkToUs: React.FC<TalkToUsProps> = ({
   const [ssoRemoteAuth, setSsoRemoteAuth] = useState('');
   const [showConfig, setShowConfig] = useState(false);
 
-  // Dynamic origin-aware URL
+  // Dynamic origin-aware canonical URL
   const currentUrl =
     articleUrl ||
-    (typeof window !== 'undefined' && window.location.href.split('?')[0]) ||
-    'https://mas-exchanger.singapore/talk-to-us';
+    (typeof window !== 'undefined' && window.location.origin
+      ? `${window.location.origin}/talk-to-us`
+      : 'https://mas-exchanger-1.disqus.com/talk-to-us');
 
   const shortname = 'mas-exchanger-1';
 
-  // Base Disqus config
+  // Base Disqus config matching exact user specifications
   const baseConfig = {
     url: currentUrl,
     identifier: articleId,
@@ -34,18 +36,18 @@ export const TalkToUs: React.FC<TalkToUsProps> = ({
     language: 'en',
   };
 
-  // SSO enhanced config matching user specification
+  // SSO enhanced config matching exact user specification
   const configWithSSO = {
     ...baseConfig,
     remoteAuthS3: ssoRemoteAuth || '',
     apiKey: ssoApiKey || '',
     sso: {
-      name: 'SingaRate SSO',
-      button: 'https://mas-exchanger-1.disqus.com/favicon.ico',
-      icon: 'https://mas-exchanger-1.disqus.com/favicon.ico',
-      url: typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://example.com/login/',
-      logout: typeof window !== 'undefined' ? `${window.location.origin}/logout` : 'https://example.com/logout/',
-      profile_url: 'https://example.com/profileUrlTemplate/{username}',
+      name: 'SampleNews',
+      button: 'http://example.com/images/samplenews.gif',
+      icon: 'http://example.com/favicon.png',
+      url: 'http://example.com/login/',
+      logout: 'http://example.com/logout/',
+      profile_url: 'http://example.com/profileUrlTemplate/{username}',
       width: '800',
       height: '400',
     },
@@ -60,8 +62,8 @@ export const TalkToUs: React.FC<TalkToUsProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-slate-900 text-white rounded-lg">
-                <MessageSquare className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                <MessageSquare className="w-4 h-4" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                 Talk to Us
@@ -76,9 +78,11 @@ export const TalkToUs: React.FC<TalkToUsProps> = ({
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 border border-slate-200/80 rounded-lg text-xs font-semibold text-slate-700 font-mono">
               <MessageCircle className="w-3.5 h-3.5 text-slate-600" />
-              <CommentCount shortname={shortname} config={baseConfig}>
-                Comments
-              </CommentCount>
+              <DisqusErrorBoundary fallbackTitle="Comment counter unavailable">
+                <CommentCount shortname={shortname} config={baseConfig}>
+                  Comments
+                </CommentCount>
+              </DisqusErrorBoundary>
             </div>
 
             <button
@@ -172,11 +176,11 @@ export const TalkToUs: React.FC<TalkToUsProps> = ({
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-800">Forum Feed</span>
             <span aria-hidden="true">·</span>
-            <span>Channel: mas-exchanger-1</span>
+            <span className="font-mono text-slate-600">Channel: {shortname}</span>
           </div>
 
           <a
-            href="https://disqus.com"
+            href={`https://${shortname}.disqus.com`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 hover:text-slate-800 transition-colors"
@@ -186,9 +190,11 @@ export const TalkToUs: React.FC<TalkToUsProps> = ({
           </a>
         </div>
 
-        {/* Embedded Disqus Forum */}
+        {/* Embedded Disqus Forum with ErrorBoundary */}
         <div className="disqus-container">
-          <DiscussionEmbed shortname={shortname} config={activeConfig} />
+          <DisqusErrorBoundary shortname={shortname} fallbackTitle="Disqus Discussion Forum">
+            <DiscussionEmbed shortname={shortname} config={activeConfig} />
+          </DisqusErrorBoundary>
         </div>
       </div>
     </div>
